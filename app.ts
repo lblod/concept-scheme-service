@@ -3,6 +3,8 @@ import { app } from 'mu';
 import express, { Request, Response, ErrorRequestHandler } from 'express';
 import bodyParser from 'body-parser';
 
+import { conceptRouter } from './router/concept';
+
 app.use(
   bodyParser.json({
     limit: '500mb',
@@ -13,6 +15,8 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/concept', conceptRouter);
 
 app.get('/health-check', async (req: Request, res: Response) => {
   res.send({ status: 'ok' });
