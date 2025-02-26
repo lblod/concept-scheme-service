@@ -3,7 +3,7 @@ import Router from 'express-promise-router';
 import { Request, Response } from 'express';
 
 import {
-  findConceptImplementation,
+  findConceptImplementations,
   getConceptUris,
   deleteConceptsWithImplementations,
 } from '../controller/concept';
@@ -22,7 +22,7 @@ conceptRouter.get(
       };
     }
 
-    const implementations = await findConceptImplementation(conceptUris[0]);
+    const implementations = await findConceptImplementations(conceptUris[0]);
 
     res.status(200).send({
       hasImplementations: implementations.length >= 1,

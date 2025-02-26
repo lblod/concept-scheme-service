@@ -17,7 +17,7 @@ export async function getConceptUris(conceptIds: Array<string>) {
   return queryResult.results.bindings.map((b) => b.concept?.value);
 }
 
-export async function findConceptImplementation(conceptUri: string) {
+export async function findConceptImplementations(conceptUri: string) {
   const queryResult = await query(`
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 

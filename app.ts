@@ -4,6 +4,7 @@ import express, { Request, Response, ErrorRequestHandler } from 'express';
 import bodyParser from 'body-parser';
 
 import { conceptRouter } from './router/concept';
+import { conceptSchemeRouter } from './router/concept-scheme';
 
 app.use(
   bodyParser.json({
@@ -17,6 +18,7 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/concept', conceptRouter);
+app.use('/concept-scheme', conceptSchemeRouter);
 
 app.get('/health-check', async (req: Request, res: Response) => {
   res.send({ status: 'ok' });
