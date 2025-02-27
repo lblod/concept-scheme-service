@@ -1,8 +1,11 @@
 import { query, update, sparqlEscapeString, sparqlEscapeUri } from 'mu';
 
 export async function getConceptUris(conceptIds: Array<string>) {
-  const escapedIds = conceptIds.map((id) => sparqlEscapeString(id)).join('\n');
-  const queryResult = await query(`
+  try {
+    const escapedIds = conceptIds
+      .map((id) => sparqlEscapeString(id))
+      .join('\n');
+    const queryResult = await query(`
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 
@@ -14,11 +17,18 @@ export async function getConceptUris(conceptIds: Array<string>) {
     }
   `);
 
-  return queryResult.results.bindings.map((b) => b.concept?.value);
+    return queryResult.results.bindings.map((b) => b.concept?.value);
+  } catch (error) {
+    throw {
+      message: `Something went wrong while getting concepts with ids: ${conceptIds.join(', ')}.`,
+      status: 500,
+    };
+  }
 }
 
 export async function findConceptImplementations(conceptUri: string) {
-  const queryResult = await query(`
+  try {
+    const queryResult = await query(`
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
     SELECT DISTINCT ?implementation
@@ -30,9 +40,15 @@ export async function findConceptImplementations(conceptUri: string) {
     }
   `);
 
-  return queryResult.results.bindings
-    .map((b) => b.implementation?.value)
-    .filter((i) => i);
+    return queryResult.results.bindings
+      .map((b) => b.implementation?.value)
+      .filter((i) => i);
+  } catch (error) {
+    throw {
+      message: `Something went wrong while looking for implementations for concept (${conceptUri}).`,
+      status: 500,
+    };
+  }
 }
 
 export async function deleteConceptsWithImplementations(

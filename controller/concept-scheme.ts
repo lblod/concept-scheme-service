@@ -1,38 +1,52 @@
 import { query, update, sparqlEscapeString, sparqlEscapeUri } from 'mu';
 
 export async function getConceptSchemeUri(conceptSchemeId: string) {
-  const queryResult = await query(`
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  try {
+    const queryResult = await query(`
+      PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  
+      SELECT ?conceptScheme
+      WHERE {
+        ?conceptScheme a skos:ConceptScheme .
+        ?conceptScheme mu:uuid ${sparqlEscapeString(conceptSchemeId)} .
+      } LIMIT 1
+    `);
 
-    SELECT ?conceptScheme
-    WHERE {
-      ?conceptScheme a skos:ConceptScheme.
-      ?conceptScheme mu:uuid ${sparqlEscapeString(conceptSchemeId)} .
-    } LIMIT 1
-  `);
-
-  return queryResult.results.bindings[0].conceptScheme?.value;
+    return queryResult.results.bindings[0].conceptScheme?.value;
+  } catch (error) {
+    throw {
+      message: `Something went wrong while getting concept-scheme with id: ${conceptSchemeId}.`,
+      status: 500,
+    };
+  }
 }
 
 export async function findConceptSchemeImplementations(
   conceptSchemeUri: string,
 ) {
-  const queryResult = await query(`
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+  try {
+    const queryResult = await query(`
+      PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+  
+      SELECT DISTINCT ?implementation
+      WHERE {
+        ?implementation a ?type .
+        ?implementation ?p ${sparqlEscapeUri(conceptSchemeUri)} .
+  
+        FILTER(?type != skos:ConceptScheme && ?p != <http://www.w3.org/2004/02/skos/core#inScheme>)
+      }
+    `);
 
-    SELECT DISTINCT ?implementation
-    WHERE {
-      ?implementation a ?type .
-      ?implementation ?p ${sparqlEscapeUri(conceptSchemeUri)} .
-
-      FILTER(?type != skos:ConceptScheme && ?p != <http://www.w3.org/2004/02/skos/core#inScheme>)
-    }
-  `);
-
-  return queryResult.results.bindings
-    .map((b) => b.implementation?.value)
-    .filter((i) => i);
+    return queryResult.results.bindings
+      .map((b) => b.implementation?.value)
+      .filter((i) => i);
+  } catch (error) {
+    throw {
+      message: `Something went wrong while finding implementations for concept-scheme (${conceptSchemeUri}).`,
+      status: 500,
+    };
+  }
 }
 
 export async function deleteConceptSchemeWithImplementations(
@@ -60,35 +74,42 @@ export async function deleteConceptSchemeWithImplementations(
   } catch (error) {
     throw {
       message:
-        'Something went wrong while deleting the concept-scheme and there implementations',
+        'Something went wrong while deleting the concept-scheme and there implementations.',
       status: 500,
     };
   }
 }
 
 export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
-  const queryResult = await query(`
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-
-    SELECT DISTINCT ?concept ?implementation
-    WHERE {
-      ${sparqlEscapeUri(conceptSchemeUri)} a skos:ConceptScheme .
-      ?concept skos:inScheme  ${sparqlEscapeUri(conceptSchemeUri)} .
-
-      OPTIONAL {
-        ?implementation a ?type . 
-        ?implementation ?p ?concept . 
-
-        FILTER(?type != skos:Concept) 
+  try {
+    const queryResult = await query(`
+      PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+      PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  
+      SELECT DISTINCT ?concept ?implementation
+      WHERE {
+        ${sparqlEscapeUri(conceptSchemeUri)} a skos:ConceptScheme .
+        ?concept skos:inScheme  ${sparqlEscapeUri(conceptSchemeUri)} .
+  
+        OPTIONAL {
+          ?implementation a ?type . 
+          ?implementation ?p ?concept . 
+  
+          FILTER(?type != skos:Concept) 
+        }
       }
-    }
-  `);
+    `);
 
-  return queryResult.results.bindings.map((b) => {
-    return {
-      uri: b.concept?.value,
-      hasImplementation: !!b.implementation?.value,
+    return queryResult.results.bindings.map((b) => {
+      return {
+        uri: b.concept?.value,
+        hasImplementation: !!b.implementation?.value,
+      };
+    });
+  } catch (error) {
+    throw {
+      message: `Something went wrong while trying to get all the concepts in concept-scheme (${conceptSchemeUri}).`,
+      status: 500,
     };
-  });
+  }
 }
