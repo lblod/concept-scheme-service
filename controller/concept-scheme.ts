@@ -66,19 +66,29 @@ export async function deleteConceptSchemeWithImplementations(
   }
 }
 
-export async function getConceptsInConceptScheme(
-  conceptSchemeUri: string,
-): Promise<Array<string>> {
+export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
   const queryResult = await query(`
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 
-    SELECT DISTINCT ?concept
+    SELECT DISTINCT ?concept ?implementation
     WHERE {
       ${sparqlEscapeUri(conceptSchemeUri)} a skos:ConceptScheme .
       ?concept skos:inScheme  ${sparqlEscapeUri(conceptSchemeUri)} .
+
+      OPTIONAL {
+        ?implementation a ?type . 
+        ?implementation ?p ?concept . 
+
+        FILTER(?type != skos:Concept) 
+      }
     }
   `);
 
-  return queryResult.results.bindings.map((b) => b.concept?.value);
+  return queryResult.results.bindings.map((b) => {
+    return {
+      uri: b.concept?.value,
+      hasImplementation: !!b.implementation?.value,
+    };
+  });
 }
