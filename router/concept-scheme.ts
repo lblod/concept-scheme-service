@@ -3,17 +3,17 @@ import Router from 'express-promise-router';
 import { Request, Response } from 'express';
 
 import {
-  deleteConceptSchemeWithImplementations,
-  findConceptSchemeImplementations,
+  deleteConceptSchemeAndUsage,
+  findConceptSchemeUsage,
   getConceptSchemeUri,
   getConceptsInConceptScheme,
 } from '../controller/concept-scheme';
-import { deleteConceptsWithImplementations } from '../controller/concept';
+import { deleteConceptsAndUsage } from '../controller/concept';
 
 export const conceptSchemeRouter = Router();
 
 conceptSchemeRouter.get(
-  '/:id/has-implementations',
+  '/:id/has-usage',
   async (req: Request, res: Response) => {
     const conceptSchemeUri = await getConceptSchemeUri(req.params.id);
 
@@ -24,17 +24,16 @@ conceptSchemeRouter.get(
       };
     }
 
-    const implementations =
-      await findConceptSchemeImplementations(conceptSchemeUri);
+    const usageUris = await findConceptSchemeUsage(conceptSchemeUri);
     const concepts = await getConceptsInConceptScheme(conceptSchemeUri);
-    const implementedConceptsCount = concepts
-      .map((c) => c.hasImplementation)
+    const conceptUsageCount = concepts
+      .map((c) => c.hasUsage)
       .filter((bool) => bool).length;
 
     res.status(200).send({
-      hasImplementations: implementations.length >= 1,
-      uris: implementations,
-      totalOfConceptImplementations: implementedConceptsCount,
+      hasUsage: usageUris.length >= 1,
+      uris: usageUris,
+      conceptUsageCount,
     });
   },
 );
@@ -49,10 +48,10 @@ conceptSchemeRouter.delete('/:id', async (req: Request, res: Response) => {
     };
   }
 
-  await deleteConceptSchemeWithImplementations(conceptSchemeUri);
+  await deleteConceptSchemeAndUsage(conceptSchemeUri);
   const conceptUris = (await getConceptsInConceptScheme(conceptSchemeUri)).map(
     (concept) => concept.uri,
   );
-  await deleteConceptsWithImplementations(conceptUris);
+  await deleteConceptsAndUsage(conceptUris);
   res.status(204).send();
 });

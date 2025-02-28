@@ -22,43 +22,39 @@ export async function getConceptSchemeUri(conceptSchemeId: string) {
   }
 }
 
-export async function findConceptSchemeImplementations(
-  conceptSchemeUri: string,
-) {
+export async function findConceptSchemeUsage(conceptSchemeUri: string) {
   try {
     const queryResult = await query(`
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   
-      SELECT DISTINCT ?implementation
+      SELECT DISTINCT ?usage
       WHERE {
-        ?implementation a ?type .
-        ?implementation ?p ${sparqlEscapeUri(conceptSchemeUri)} .
+        ?usage a ?type .
+        ?usage ?p ${sparqlEscapeUri(conceptSchemeUri)} .
   
         FILTER(?type != skos:ConceptScheme && ?p != <http://www.w3.org/2004/02/skos/core#inScheme>)
       }
     `);
 
     return queryResult.results.bindings
-      .map((b) => b.implementation?.value)
+      .map((b) => b.usage?.value)
       .filter((i) => i);
   } catch (error) {
     throw {
-      message: `Something went wrong while finding implementations for concept-scheme (${conceptSchemeUri}).`,
+      message: `Something went wrong while looking for the usage of concept-scheme (${conceptSchemeUri}).`,
       status: 500,
     };
   }
 }
 
-export async function deleteConceptSchemeWithImplementations(
-  conceptSchemeUri: string,
-) {
+export async function deleteConceptSchemeAndUsage(conceptSchemeUri: string) {
   try {
     await update(`
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   
       DELETE {
         ?conceptScheme ?cP ?cO .
-        ?implementation ?p ?conceptScheme .
+        ?usage ?p ?conceptScheme .
       }
       WHERE {
         VALUES ?conceptScheme { ${sparqlEscapeUri(conceptSchemeUri)} }
@@ -67,14 +63,14 @@ export async function deleteConceptSchemeWithImplementations(
         ?conceptScheme ?cP ?cO .
   
         OPTIONAL {
-          ?implementation ?p ?conceptScheme .
+          ?usage ?p ?conceptScheme .
         }
       }
     `);
   } catch (error) {
     throw {
       message:
-        'Something went wrong while deleting the concept-scheme and there implementations.',
+        'Something went wrong while deleting the concept-scheme and there usages.',
       status: 500,
     };
   }
@@ -86,14 +82,14 @@ export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
   
-      SELECT DISTINCT ?concept ?implementation
+      SELECT DISTINCT ?concept ?usage
       WHERE {
         ${sparqlEscapeUri(conceptSchemeUri)} a skos:ConceptScheme .
         ?concept skos:inScheme  ${sparqlEscapeUri(conceptSchemeUri)} .
   
         OPTIONAL {
-          ?implementation a ?type . 
-          ?implementation ?p ?concept . 
+          ?usage a ?type . 
+          ?usage ?p ?concept . 
   
           FILTER(?type != skos:Concept) 
         }
@@ -103,7 +99,7 @@ export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
     return queryResult.results.bindings.map((b) => {
       return {
         uri: b.concept?.value,
-        hasImplementation: !!b.implementation?.value,
+        hasUsage: !!b.usage?.value,
       };
     });
   } catch (error) {

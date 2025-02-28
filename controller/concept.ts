@@ -26,34 +26,32 @@ export async function getConceptUris(conceptIds: Array<string>) {
   }
 }
 
-export async function findConceptImplementations(conceptUri: string) {
+export async function findConceptUsage(conceptUri: string) {
   try {
     const queryResult = await query(`
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-    SELECT DISTINCT ?implementation
+    SELECT DISTINCT ?usage
     WHERE {
-      ?implementation a ?type .
-      ?implementation ?p ${sparqlEscapeUri(conceptUri)} .
+      ?usage a ?type .
+      ?usage ?p ${sparqlEscapeUri(conceptUri)} .
 
       FILTER(?type != skos:Concept)
     }
   `);
 
     return queryResult.results.bindings
-      .map((b) => b.implementation?.value)
+      .map((b) => b.usage?.value)
       .filter((i) => i);
   } catch (error) {
     throw {
-      message: `Something went wrong while looking for implementations for concept (${conceptUri}).`,
+      message: `Something went wrong while looking for the usage of concept (${conceptUri}).`,
       status: 500,
     };
   }
 }
 
-export async function deleteConceptsWithImplementations(
-  conceptUris: Array<string>,
-) {
+export async function deleteConceptsAndUsage(conceptUris: Array<string>) {
   const escapedUris = conceptUris.map((uri) => sparqlEscapeUri(uri)).join('\n');
   try {
     await update(`
@@ -61,7 +59,7 @@ export async function deleteConceptsWithImplementations(
   
       DELETE {
         ?concept ?cP ?cO .
-        ?implementation ?p ?concept .
+        ?usage ?p ?concept .
       }
       WHERE {
         VALUES ?concept { ${escapedUris} }
@@ -70,14 +68,14 @@ export async function deleteConceptsWithImplementations(
         ?concept ?cP ?cO .
   
         OPTIONAL {
-          ?implementation ?p ?concept .
+          ?usage ?p ?concept .
         }
       }
     `);
   } catch (error) {
     throw {
       message:
-        'Something went wrong while deleting the concepts and there implementations',
+        'Something went wrong while deleting the concepts and there usages.',
       status: 500,
     };
   }

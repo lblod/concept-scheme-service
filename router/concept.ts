@@ -3,33 +3,30 @@ import Router from 'express-promise-router';
 import { Request, Response } from 'express';
 
 import {
-  findConceptImplementations,
   getConceptUris,
-  deleteConceptsWithImplementations,
+  deleteConceptsAndUsage,
+  findConceptUsage,
 } from '../controller/concept';
 
 export const conceptRouter = Router();
 
-conceptRouter.get(
-  '/:id/has-implementations',
-  async (req: Request, res: Response) => {
-    const conceptUris = await getConceptUris([req.params.id]);
+conceptRouter.get('/:id/has-usage', async (req: Request, res: Response) => {
+  const conceptUris = await getConceptUris([req.params.id]);
 
-    if (conceptUris.length === 0) {
-      throw {
-        message: `Invalid concept id. Could not find concept with id: ${req.params.id}`,
-        status: 400,
-      };
-    }
+  if (conceptUris.length === 0) {
+    throw {
+      message: `Invalid concept id. Could not find concept with id: ${req.params.id}`,
+      status: 400,
+    };
+  }
 
-    const implementations = await findConceptImplementations(conceptUris[0]);
+  const usageUris = await findConceptUsage(conceptUris[0]);
 
-    res.status(200).send({
-      hasImplementations: implementations.length >= 1,
-      uris: implementations,
-    });
-  },
-);
+  res.status(200).send({
+    hasUsage: usageUris.length >= 1,
+    uris: usageUris,
+  });
+});
 
 conceptRouter.delete('/batch', async (req: Request, res: Response) => {
   const conceptUris = await getConceptUris(req.body.ids);
@@ -41,7 +38,7 @@ conceptRouter.delete('/batch', async (req: Request, res: Response) => {
     };
   }
 
-  await deleteConceptsWithImplementations(conceptUris);
+  await deleteConceptsAndUsage(conceptUris);
   res.status(204).send();
 });
 
@@ -55,6 +52,6 @@ conceptRouter.delete('/:id', async (req: Request, res: Response) => {
     };
   }
 
-  await deleteConceptsWithImplementations(conceptUris);
+  await deleteConceptsAndUsage(conceptUris);
   res.status(204).send();
 });
