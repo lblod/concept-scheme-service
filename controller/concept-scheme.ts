@@ -32,7 +32,10 @@ export async function findConceptSchemeUsage(conceptSchemeUri: string) {
         ?usage a ?type .
         ?usage ?p ${sparqlEscapeUri(conceptSchemeUri)} .
   
-        FILTER(?type != skos:ConceptScheme && ?p != <http://www.w3.org/2004/02/skos/core#inScheme>)
+        FILTER(
+          ?usage != ${sparqlEscapeUri(conceptSchemeUri)} &&
+          ?p != <http://www.w3.org/2004/02/skos/core#inScheme>
+        )
       }
     `);
 
@@ -88,10 +91,9 @@ export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
         ?concept skos:inScheme  ${sparqlEscapeUri(conceptSchemeUri)} .
   
         OPTIONAL {
-          ?usage a ?type . 
           ?usage ?p ?concept . 
   
-          FILTER(?type != skos:Concept) 
+          FILTER(?usage != ${sparqlEscapeUri(conceptSchemeUri)}) 
         }
       }
     `);

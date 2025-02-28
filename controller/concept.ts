@@ -33,10 +33,9 @@ export async function findConceptUsage(conceptUri: string) {
 
     SELECT DISTINCT ?usage
     WHERE {
-      ?usage a ?type .
       ?usage ?p ${sparqlEscapeUri(conceptUri)} .
 
-      FILTER(?type != skos:Concept)
+      FILTER(?usage != ${sparqlEscapeUri(conceptUri)})
     }
   `);
 
