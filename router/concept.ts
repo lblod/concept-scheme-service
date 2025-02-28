@@ -31,12 +31,26 @@ conceptRouter.get(
   },
 );
 
-conceptRouter.delete('/ids', async (req: Request, res: Response) => {
+conceptRouter.delete('/batch', async (req: Request, res: Response) => {
   const conceptUris = await getConceptUris(req.body.ids);
 
   if (conceptUris.length === 0) {
     throw {
       message: 'No concept ids found in body',
+      status: 400,
+    };
+  }
+
+  await deleteConceptsWithImplementations(conceptUris);
+  res.status(204).send();
+});
+
+conceptRouter.delete('/:id', async (req: Request, res: Response) => {
+  const conceptUris = await getConceptUris([req.params.id]);
+
+  if (conceptUris.length === 0) {
+    throw {
+      message: `No concept found for id: ${req.params.id}`,
       status: 400,
     };
   }
