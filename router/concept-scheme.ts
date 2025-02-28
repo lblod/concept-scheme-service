@@ -48,10 +48,10 @@ conceptSchemeRouter.delete('/:id', async (req: Request, res: Response) => {
     };
   }
 
-  await deleteConceptSchemeAndUsage(conceptSchemeUri);
   const conceptUris = (await getConceptsInConceptScheme(conceptSchemeUri)).map(
     (concept) => concept.uri,
   );
+  await deleteConceptSchemeAndUsage(conceptSchemeUri);
   await deleteConceptsAndUsage(conceptUris);
   res.status(204).send();
 });
