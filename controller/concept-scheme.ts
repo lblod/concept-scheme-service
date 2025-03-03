@@ -85,7 +85,7 @@ export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
       PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
   
-      SELECT DISTINCT ?concept ?usage
+      SELECT DISTINCT ?concept (SAMPLE(?usage) AS ?usage)
       WHERE {
         ${sparqlEscapeUri(conceptSchemeUri)} a skos:ConceptScheme .
         ?concept skos:inScheme  ${sparqlEscapeUri(conceptSchemeUri)} .
@@ -95,7 +95,7 @@ export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
   
           FILTER(?usage != ${sparqlEscapeUri(conceptSchemeUri)}) 
         }
-      }
+      } GROUP BY ?concept
     `);
 
     return queryResult.results.bindings.map((b) => {
