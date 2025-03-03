@@ -1,4 +1,10 @@
-import { query, update, sparqlEscapeString, sparqlEscapeUri } from 'mu';
+import {
+  query,
+  update,
+  sparqlEscapeString,
+  sparqlEscapeUri,
+  sparqlEscapeDateTime,
+} from 'mu';
 
 export async function getConceptSchemeUri(conceptSchemeId: string) {
   try {
@@ -51,14 +57,28 @@ export async function findConceptSchemeUsage(conceptSchemeUri: string) {
 }
 
 export async function deleteConceptScheme(conceptSchemeUri: string) {
+  const now = new Date();
   try {
     await update(`
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-  
+      PREFIX astreams: <http://www.w3.org/ns/activitystreams#>
+      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
       DELETE {
         ?conceptScheme ?csP ?csO .
         ?usage ?p ?conceptScheme .
         ?concept ?cp ?co .
+      }
+      INSERT {
+        ?conceptScheme a astreams:Tombstone ;
+          astreams:deleted ${sparqlEscapeDateTime(now)} ;
+          dct:modified ${sparqlEscapeDateTime(now)} ;
+          astreams:formerType skos:ConceptScheme .
+
+        ?concept a astreams:Tombstone ;
+          astreams:deleted ${sparqlEscapeDateTime(now)} ;
+          dct:modified ${sparqlEscapeDateTime(now)} ;
+          astreams:formerType skos:Concept .
       }
       WHERE {
         VALUES ?conceptScheme { ${sparqlEscapeUri(conceptSchemeUri)} }
@@ -71,7 +91,7 @@ export async function deleteConceptScheme(conceptSchemeUri: string) {
         }
 
         OPTIONAL {
-          ?conceptScheme skos:inScheme ?concept .
+          ?concept skos:inScheme ?conceptScheme .
           ?concept ?cp ?co .
         }
       }

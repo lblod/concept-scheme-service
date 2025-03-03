@@ -1,4 +1,10 @@
-import { query, update, sparqlEscapeString, sparqlEscapeUri } from 'mu';
+import {
+  query,
+  update,
+  sparqlEscapeString,
+  sparqlEscapeUri,
+  sparqlEscapeDateTime,
+} from 'mu';
 
 export async function getConceptUris(conceptIds: Array<string>) {
   try {
@@ -52,13 +58,22 @@ export async function findConceptUsage(conceptUri: string) {
 
 export async function deleteConceptsAndUsage(conceptUris: Array<string>) {
   const escapedUris = conceptUris.map((uri) => sparqlEscapeUri(uri)).join('\n');
+  const now = new Date();
   try {
     await update(`
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-  
+      PREFIX astreams: <http://www.w3.org/ns/activitystreams#>
+      PREFIX dct: <http://purl.org/dc/terms/>
+      PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
       DELETE {
         ?concept ?cP ?cO .
         ?usage ?p ?concept .
+      }
+      INSERT {
+        ?concept a astreams:Tombstone ;
+          astreams:deleted ${sparqlEscapeDateTime(now)} ;
+          dct:modified ${sparqlEscapeDateTime(now)} ;
+          astreams:formerType skos:Concept .
       }
       WHERE {
         VALUES ?concept { ${escapedUris} }
