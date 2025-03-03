@@ -3,12 +3,11 @@ import Router from 'express-promise-router';
 import { Request, Response } from 'express';
 
 import {
-  deleteConceptSchemeAndUsage,
+  deleteConceptScheme,
   findConceptSchemeUsage,
   getConceptSchemeUri,
   getConceptsInConceptScheme,
 } from '../controller/concept-scheme';
-import { deleteConceptsAndUsage } from '../controller/concept';
 
 export const conceptSchemeRouter = Router();
 
@@ -48,10 +47,6 @@ conceptSchemeRouter.delete('/:id', async (req: Request, res: Response) => {
     };
   }
 
-  const conceptUris = (await getConceptsInConceptScheme(conceptSchemeUri)).map(
-    (concept) => concept.uri,
-  );
-  await deleteConceptSchemeAndUsage(conceptSchemeUri);
-  await deleteConceptsAndUsage(conceptUris);
+  await deleteConceptScheme(conceptSchemeUri);
   res.status(204).send();
 });

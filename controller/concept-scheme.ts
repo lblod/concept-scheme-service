@@ -50,30 +50,35 @@ export async function findConceptSchemeUsage(conceptSchemeUri: string) {
   }
 }
 
-export async function deleteConceptSchemeAndUsage(conceptSchemeUri: string) {
+export async function deleteConceptScheme(conceptSchemeUri: string) {
   try {
     await update(`
       PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   
       DELETE {
-        ?conceptScheme ?cP ?cO .
+        ?conceptScheme ?csP ?csO .
         ?usage ?p ?conceptScheme .
+        ?concept ?cp ?co .
       }
       WHERE {
         VALUES ?conceptScheme { ${sparqlEscapeUri(conceptSchemeUri)} }
   
         ?conceptScheme a skos:ConceptScheme .
-        ?conceptScheme ?cP ?cO .
-  
+        ?conceptScheme ?csP ?csO .
+
         OPTIONAL {
           ?usage ?p ?conceptScheme .
+        }
+
+        OPTIONAL {
+          ?conceptScheme skos:inScheme ?concept .
+          ?concept ?cp ?co .
         }
       }
     `);
   } catch (error) {
     throw {
-      message:
-        'Something went wrong while deleting the concept-scheme and there usages.',
+      message: `Something went wrong while deleting the concept-scheme (${conceptSchemeUri})`,
       status: 500,
     };
   }
