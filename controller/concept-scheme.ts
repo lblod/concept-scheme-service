@@ -68,6 +68,7 @@ export async function deleteConceptScheme(conceptSchemeUri: string) {
         ?conceptScheme ?csP ?csO .
         ?usage ?p ?conceptScheme .
         ?concept ?cp ?co .
+        ?conceptUsage ?pc ?concept .
       }
       INSERT {
         ?conceptScheme a astreams:Tombstone ;
@@ -93,6 +94,9 @@ export async function deleteConceptScheme(conceptSchemeUri: string) {
         OPTIONAL {
           ?concept skos:inScheme ?conceptScheme .
           ?concept ?cp ?co .
+        }
+        OPTIONAL {
+          ?conceptUsage ?pc ?concept .
         }
       }
     `);
