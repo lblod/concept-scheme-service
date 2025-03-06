@@ -6,6 +6,8 @@ import {
   sparqlEscapeDateTime,
 } from 'mu';
 
+import { HttpError } from '../utils/http-error';
+
 export async function getConceptSchemeUri(conceptSchemeId: string) {
   try {
     const queryResult = await query(`
@@ -21,10 +23,9 @@ export async function getConceptSchemeUri(conceptSchemeId: string) {
 
     return queryResult.results.bindings[0].conceptScheme?.value;
   } catch (error) {
-    throw {
-      message: `Something went wrong while getting concept-scheme with id: ${conceptSchemeId}.`,
-      status: 500,
-    };
+    throw new HttpError(
+      `Something went wrong while getting concept-scheme with id: ${conceptSchemeId}.`,
+    );
   }
 }
 
@@ -49,10 +50,9 @@ export async function findConceptSchemeUsage(conceptSchemeUri: string) {
       .map((b) => b.usage?.value)
       .filter((i) => i);
   } catch (error) {
-    throw {
-      message: `Something went wrong while looking for the usage of concept-scheme (${conceptSchemeUri}).`,
-      status: 500,
-    };
+    throw new HttpError(
+      `Something went wrong while looking for the usage of concept-scheme (${conceptSchemeUri}).`,
+    );
   }
 }
 
@@ -97,10 +97,9 @@ export async function deleteConceptScheme(conceptSchemeUri: string) {
       }
     `);
   } catch (error) {
-    throw {
-      message: `Something went wrong while deleting the concept-scheme (${conceptSchemeUri})`,
-      status: 500,
-    };
+    throw new HttpError(
+      `Something went wrong while deleting the concept-scheme (${conceptSchemeUri})`,
+    );
   }
 }
 
@@ -130,9 +129,8 @@ export async function getConceptsInConceptScheme(conceptSchemeUri: string) {
       };
     });
   } catch (error) {
-    throw {
-      message: `Something went wrong while trying to get all the concepts in concept-scheme (${conceptSchemeUri}).`,
-      status: 500,
-    };
+    throw new HttpError(
+      `Something went wrong while trying to get all the concepts in concept-scheme (${conceptSchemeUri}).`,
+    );
   }
 }

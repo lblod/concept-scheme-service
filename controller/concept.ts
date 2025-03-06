@@ -6,6 +6,8 @@ import {
   sparqlEscapeDateTime,
 } from 'mu';
 
+import { HttpError } from '../utils/http-error';
+
 export async function getConceptUris(conceptIds: Array<string>) {
   try {
     const escapedIds = conceptIds
@@ -25,10 +27,9 @@ export async function getConceptUris(conceptIds: Array<string>) {
 
     return queryResult.results.bindings.map((b) => b.concept?.value);
   } catch (error) {
-    throw {
-      message: `Something went wrong while getting concepts with ids: ${conceptIds.join(', ')}.`,
-      status: 500,
-    };
+    throw new HttpError(
+      `Something went wrong while getting concepts with ids: ${conceptIds.join(', ')}.`,
+    );
   }
 }
 
@@ -49,10 +50,9 @@ export async function findConceptUsage(conceptUri: string) {
       .map((b) => b.usage?.value)
       .filter((i) => i);
   } catch (error) {
-    throw {
-      message: `Something went wrong while looking for the usage of concept (${conceptUri}).`,
-      status: 500,
-    };
+    throw new HttpError(
+      `Something went wrong while looking for the usage of concept (${conceptUri}).`,
+    );
   }
 }
 
@@ -87,10 +87,8 @@ export async function deleteConceptsAndUsage(conceptUris: Array<string>) {
       }
     `);
   } catch (error) {
-    throw {
-      message:
-        'Something went wrong while deleting the concepts and there usages.',
-      status: 500,
-    };
+    throw new HttpError(
+      'Something went wrong while deleting the concepts and there usages.',
+    );
   }
 }
