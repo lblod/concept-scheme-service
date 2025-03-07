@@ -82,22 +82,22 @@ export async function deleteConceptScheme(conceptSchemeUri: string) {
           astreams:formerType skos:Concept .
       }
       WHERE {
-        VALUES ?conceptScheme { ${sparqlEscapeUri(conceptSchemeUri)} }
-  
-        ?conceptScheme a skos:ConceptScheme .
-        ?conceptScheme ?csP ?csO .
+        {{
+          VALUES ?conceptScheme { ${sparqlEscapeUri(conceptSchemeUri)} }
+        
+          ?conceptScheme a skos:ConceptScheme .
+          ?conceptScheme ?csP ?csO .
 
-        OPTIONAL {
-          ?usage ?p ?conceptScheme .
-        }
-
-        OPTIONAL {
+          OPTIONAL {
+            ?usage ?p ?conceptScheme .
+          }
+        }{
           ?concept skos:inScheme ?conceptScheme .
           ?concept ?cp ?co .
-        }
-        OPTIONAL {
-          ?conceptUsage ?pc ?concept .
-        }
+          OPTIONAL {
+            ?conceptUsage ?pc ?concept .
+          }
+        }}
       }
     `);
   } catch (error) {
