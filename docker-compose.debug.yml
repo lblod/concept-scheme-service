@@ -1,0 +1,19 @@
+services:
+  concept-scheme:
+    image: semtech/mu-javascript-template:latest
+    restart: 'no'
+    labels:
+      - 'logging=true'
+    environment:
+      - NODE_ENV=development
+      - NO_BABEL_NODE=true
+    ports:
+      - '8083:80'
+      - '9230:9229'
+    volumes:
+      - ./:/app
+    networks:
+      - debug
+networks:
+  debug:
+    external: true
